@@ -35,9 +35,12 @@ public class LyricsController {
         // Pick one instance (round-robin/load-balancer in prod)
         ServiceInstance service = instances.get(0);
 
-        String url = service.getUri() + "/lyrics?artist=" +
+        String baseUri = service.getUri().toString();
+        String url = baseUri + "/lyrics?artist=" +
                 UriUtils.encode(artist, StandardCharsets.UTF_8) +
                 "&title=" + UriUtils.encode(song, StandardCharsets.UTF_8);
+
+        System.out.println("Calling lyrics_service instance at: " + baseUri);
 
         RestTemplate restTemplate = new RestTemplate();
         System.out.println("Calling URL: " + url);
