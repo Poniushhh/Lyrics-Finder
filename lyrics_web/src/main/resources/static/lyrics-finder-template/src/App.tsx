@@ -182,29 +182,44 @@ function App() {
   const [lyricsResult, setLyricsResult] = useState<LyricsModalData | null>(null);
   const [loadingLyrics, setLoadingLyrics] = useState(false);
 
-  // Simulated lyrics fetch (replace with real API if needed)
-  async function fetchLyrics(artist: string, song: string): Promise<string> {
-    // TODO: Replace this stub with actual API call or lookup logic
-    // Show example placeholder text for now
-    return `Full lyrics for "${song}" by ${artist}...\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\nSed viverra et massa eu tempus. Fusce mollis augue vel lacus commodo,\nnec dignissim lorem varius.\n\n[This is where your lyrics will appear. Replace with real API fetch if needed for production.]`;
-  }
+  // Replace the fetchLyrics function
+    async function fetchLyrics(artist: string, song: string): Promise<LyricsModalData> {
+      const qArtist = encodeURIComponent(artist);
+      const qSong = encodeURIComponent(song);
+      const response = await fetch(`/api/lyrics?artist=${qArtist}&song=${qSong}`);
+      if (!response.ok) {
+        throw new Error('Lyrics fetch failed');
+      }
+      const data = await response.json();
+      /* Expected: {
+        artist: string,
+        song: string,
+        lyrics: string,
+        album?: string,
+        year?: string,
+        plays?: string,
+        duration?: string,
+      }
+      */
+      return data;
+    }
 
   // Handle search form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLyricsResult(null);
     setLoadingLyrics(true);
-    // Fake stat placeholders for search (can match card data if you integrate an API later)
-    const lyrics = await fetchLyrics(artistInput, songInput);
-    setLyricsResult({
-      artist: artistInput,
-      song: songInput,
-      lyrics,
-      album: "Not available",
-      year: "Not available",
-      plays: "Not available",
-      duration: "Not available",
-    });
+    try {
+          const data = await fetchLyrics(artistInput, songInput);
+          setLyricsResult(data);
+        } catch (e) {
+          setLyricsResult({
+            artist: artistInput,
+            song: songInput,
+            lyrics: 'Failed to fetch lyrics.',
+            album: '-', year: '-', plays: '-', duration: '-',
+          });
+        }
     setLoadingLyrics(false);
   };
 
@@ -223,7 +238,7 @@ function App() {
     setLyricsResult({
       artist: card.artist,
       song: card.song,
-      lyrics: fullLyrics,
+      lyrics: fullLyrics.lyrics,
       album: card.album,
       year: card.year,
       plays: card.plays,
@@ -308,12 +323,12 @@ function App() {
               type="submit"
               className="rounded-xl px-5 py-3 bg-pink-400 text-white text-lg font-bold shadow-lg hover:bg-pink-500 transition-colors h-[45px] min-h-[45px] flex items-center justify-center"
               style={{ height: "60px", minHeight: "60px" }}
-              disabled={loadingLyrics}            
+              disabled={loadingLyrics}
             >
               {loadingLyrics ? "Searching..." : "Search"}
             </button>
           </form>
-          
+
         </div>
         {/* RIGHT: Card Swiper */}
         <div className="flex-1 flex justify-center items-start w-full min-h-[520px] mt-4">
@@ -374,7 +389,7 @@ function App() {
           </div>
         </div>
       )}
-      
+
       {/* Decorative music notes floaters */}
       <svg
         className="pointer-events-none absolute top-40 left-4 opacity-30 w-12 h-12 z-0"
